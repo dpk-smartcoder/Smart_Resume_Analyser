@@ -15,18 +15,12 @@ function App() {
   const [resumeScore, setResumeScore] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
 
-  // Initialize Gemini API
+  // Initialize Gemini API (you might still need this for the backend response)
   const genAI = new GoogleGenerativeAI(API_KEY);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setUploadedFile(reader.result); // Store file content as text
-      };
-      reader.readAsText(file);
-    }
+    setUploadedFile(file); // Store the File object directly
   };
 
   const handleSubmit = async (event) => {
@@ -37,6 +31,8 @@ function App() {
       return;
     }
 
+    const jobTitle = "Frontend Developer"; // Replace with how you get the job title from your UI
+
     try {
       console.log("API Key:", API_KEY); // Debugging API Key
 
@@ -44,24 +40,38 @@ function App() {
         throw new Error("API Key is undefined. Check environment variables.");
       }
 
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const prompt = `Analyze the following resume and provide suggestions for improvement:\n\n${uploadedFile}`;
+      const formData = new FormData();
+      formData.append('resume', uploadedFile);
+      formData.append('jobtitle', jobTitle); // Send the job title
 
-      const response = await model.generateContent({ contents: [{ text: prompt }] });
+      const response = await fetch('http://localhost:5000/upload-resume', { // Update the backend URL if needed
+        method: 'POST',
+        body: formData,
+      });
 
-      if (!response || !response.candidates || response.candidates.length === 0) {
-        throw new Error("Invalid response from Gemini API");
+      if (!response.ok) {
+        let errorMessage = `Backend Error: ${response.status} - `;
+        try {
+          const errorData = await response.json();
+          errorMessage += (errorData.error || 'Something went wrong');
+        } catch (jsonError) {
+          // If the response is not JSON, read it as text
+          const errorText = await response.text();
+          errorMessage += (errorText || 'Something went wrong');
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = response.candidates[0].content.parts[0].text; // Extract response text
-      console.log("API Response:", data); // Debugging API Output
+      const data = await response.json();
 
-      setResumeScore(Math.floor(Math.random() * 100)); // Placeholder score
-      setSuggestions(data.split("\n").filter((s) => s.trim() !== "")); // Extract suggestions
+      console.log("Backend Response:", data);
+
+      setResumeScore(data.score * 100); // Assuming the score is between 0 and 1
+      setSuggestions(data.suggestions); // Backend is now responsible for analysis, so suggestions might come from there later
       setResultVisible(true);
+
     } catch (error) {
-      console.error("Error while analyzing the resume:", error);
-      alert("Failed to process your resume. Ensure API Key is set up correctly and try again.");
+      alert(error);
     }
   };
 
@@ -83,7 +93,7 @@ function App() {
             <form className="flex flex-col items-center" onSubmit={handleSubmit}>
               <input
                 type="file"
-                accept=".txt"
+                accept=".pdf,.txt" // Accept both PDF and TXT
                 className="mb-4 text-gray-600 bg-gray-100 rounded-lg p-2 w-full"
                 onChange={handleFileUpload}
               />
