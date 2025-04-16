@@ -7,7 +7,7 @@ import "./index.css";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const API_KEY = process.env.REACT_APP_API_KEY;
+
 
 function App() {
   const [uploadedFile, setUploadedFile] = useState(null);
