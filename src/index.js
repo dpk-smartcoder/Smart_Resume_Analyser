@@ -1,141 +1,198 @@
-// const API_KEY = process.env.REACT_APP_API_KEY;
-// console.log("API Key:", API_KEY);
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 import "./index.css";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Typewriter component 
+const Typewriter = ({ text, speed = 100 }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [index, setIndex] = useState(0); // Track current index for typing animation
 
+  useEffect(() => {
+    let interval;
 
+    // Start typing
+    if (index < text.length) {
+      interval = setInterval(() => {
+        setDisplayedText((prev) => prev + text[index]);
+        setIndex((prevIndex) => prevIndex + 1);
+      }, speed);
+    }
 
-function App() {
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, [index, text, speed]);
+
+  return (
+    <h1 className="text-4xl sm:text-6xl font-bold text-white text-center drop-shadow-lg">
+      {displayedText}
+    </h1>
+  );
+};
+
+const LandingPage = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="bg-gradient-to-br from-blue-500 to-cyan-400 min-h-screen flex flex-col justify-between items-center p-6">
+      <div className="absolute top-6 right-6">
+        <img src="/logo.png" alt="Logo" className="h-12" />
+      </div>
+
+      <div className="flex-grow flex flex-col justify-center items-center">
+        <Typewriter text="Smart Resume Analyser" />
+        <p className="text-white text-lg mt-4 text-center max-w-lg">
+          Upload your resume and let our smart engine evaluate and enhance it for your dream job.
+        </p>
+        <button
+          onClick={() => navigate("/analyse")}
+          className="mt-8 bg-white text-blue-600 font-semibold py-3 px-6 rounded-xl shadow-md hover:scale-105 transition transform duration-300"
+        >
+          Start Resume Analysis
+        </button>
+      </div>
+
+      <footer className="text-white text-sm mt-6">&copy; 2025 Smart Resume Analyser. All rights reserved.</footer>
+    </div>
+  );
+};
+
+const AnalysePage = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [jobCategories, setJobCategories] = useState([]);
+  const [selectedJobCategory, setSelectedJobCategory] = useState("");
   const [resultVisible, setResultVisible] = useState(false);
   const [resumeScore, setResumeScore] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize Gemini API (you might still need this for the backend response)
-  const genAI = new GoogleGenerativeAI(API_KEY);
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    setUploadedFile(file); // Store the File object directly
-  };
+  useEffect(() => {
+    const fetchJobCategories = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/get-job-categories");
+        const data = await response.json();
+        setJobCategories(data.categories || []);
+      } catch (error) {
+        console.error("Error fetching job categories:", error);
+      }
+    };
+    fetchJobCategories();
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!uploadedFile || !selectedJobCategory) return alert("Upload resume and select job category.");
 
-    if (!uploadedFile) {
-      alert("Please upload a resume before submitting.");
-      return;
-    }
-
-    const jobTitle = "Frontend Developer"; // Replace with how you get the job title from your UI
+    const formData = new FormData();
+    formData.append("resume", uploadedFile);
+    formData.append("jobtitle", selectedJobCategory);
 
     try {
-      console.log("API Key:", API_KEY); // Debugging API Key
-
-      if (!API_KEY) {
-        throw new Error("API Key is undefined. Check environment variables.");
-      }
-
-      const formData = new FormData();
-      formData.append('resume', uploadedFile);
-      formData.append('jobtitle', jobTitle); // Send the job title
-
-      const response = await fetch('http://localhost:5000/upload-resume', { // Update the backend URL if needed
-        method: 'POST',
+      setLoading(true);
+      const response = await fetch("http://localhost:5000/upload-resume", {
+        method: "POST",
         body: formData,
       });
 
-      if (!response.ok) {
-        let errorMessage = `Backend Error: ${response.status} - `;
-        try {
-          const errorData = await response.json();
-          errorMessage += (errorData.error || 'Something went wrong');
-        } catch (jsonError) {
-          // If the response is not JSON, read it as text
-          const errorText = await response.text();
-          errorMessage += (errorText || 'Something went wrong');
-        }
-        throw new Error(errorMessage);
-      }
-
       const data = await response.json();
 
-      console.log("Backend Response:", data);
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
 
-      setResumeScore(data.score * 100); // Assuming the score is between 0 and 1
-      setSuggestions(data.suggestions); // Backend is now responsible for analysis, so suggestions might come from there later
+      setResumeScore(data.score * 100);
+      setSuggestions(data.suggestions || []);
       setResultVisible(true);
-
     } catch (error) {
-      alert(error);
+      alert("Error uploading resume: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-500 to-blue-200 min-h-screen flex flex-col items-center justify-center p-4">
-      <header className="w-full text-center mb-6">
-        <h1 className="text-4xl font-bold text-white">Smart Resume Analyser</h1>
-        <p className="text-lg text-white mt-2">
-          Upload your resume and see the magic unfold!
-        </p>
+    <div className="bg-gray-100 min-h-screen p-6">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-blue-600">Smart Resume Analyser</h1>
+        <img src="/logo.png" alt="Logo" className="h-10" />
       </header>
 
-      <div className="bg-white shadow-lg rounded-lg p-6 max-w-md w-full">
-        {!resultVisible && (
-          <>
-            <h2 className="text-2xl font-semibold mb-4 text-center">
-              Upload Your Resume
-            </h2>
-            <form className="flex flex-col items-center" onSubmit={handleSubmit}>
-              <input
-                type="file"
-                accept=".pdf,.txt" // Accept both PDF and TXT
-                className="mb-4 text-gray-600 bg-gray-100 rounded-lg p-2 w-full"
-                onChange={handleFileUpload}
-              />
-              <button
-                type="submit"
-                className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
-              >
-                Upload
-              </button>
-            </form>
-          </>
-        )}
+      {!resultVisible && (
+        <div className="bg-white p-6 rounded-xl shadow-lg max-w-xl mx-auto">
+          <h2 className="text-xl font-semibold text-center mb-4">Upload Resume</h2>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <select
+              value={selectedJobCategory}
+              onChange={(e) => setSelectedJobCategory(e.target.value)}
+              className="p-3 rounded-lg border border-gray-300"
+            >
+              <option value="">Select Job Category</option>
+              {jobCategories.map((category, idx) => (
+                <option key={idx} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
 
-        {resultVisible && (
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-4">
-              Resume Analysis Results
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Your resume score is:{" "}
-              <span className="text-blue-500 font-bold">{resumeScore}</span>
-            </p>
-            <h3 className="text-xl font-bold mb-2">Suggestions:</h3>
-            {suggestions.length > 0 ? (
-              <ul className="text-gray-600">
-                {suggestions.map((suggestion, index) => (
-                  <li key={index}>- {suggestion}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-600">No suggestions available.</p>
-            )}
+            <input
+              type="file"
+              accept=".pdf,.txt"
+              onChange={(e) => setUploadedFile(e.target.files[0])}
+              className="p-3 rounded-lg border border-gray-300"
+            />
+
+            <button
+              type="submit"
+              className="bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              {loading ? "Analyzing..." : "Upload"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {loading && (
+        <div className="text-center mt-6 animate-pulse text-blue-600 font-semibold">Processing your resume...</div>
+      )}
+
+      {resultVisible && (
+        <div className="card-container mt-8">
+          <div className="floating-card bg-white shadow-lg rounded-xl p-6 max-w-md mx-auto">
+            <h2 className="text-xl font-bold text-blue-700 mb-2">Resume Score</h2>
+            <p className="text-3xl font-semibold text-green-600">{resumeScore}</p>
           </div>
-        )}
-      </div>
+
+          {suggestions.length > 0 ? (
+            suggestions.map((suggestion, idx) => (
+              <div key={idx} className="floating-card bg-white shadow-md rounded-xl p-4 max-w-md mx-auto mt-4">
+                <h3 className="text-lg font-bold text-blue-600 capitalize mb-2">Suggestions</h3>
+                <ul className="list-disc list-inside text-gray-700">
+                  {suggestion.split('\n').map((tip, i) => (
+                    <li key={i}>{tip}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-gray-700">No suggestions available for this resume.</p>
+          )}
+        </div>
+      )}
+
+      <footer className="text-center mt-12 text-gray-500 text-sm">&copy; 2025 Smart Resume Analyser. All rights reserved.</footer>
     </div>
   );
-}
+};
+
+
+const App = () => (
+  <Router>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/analyse" element={<AnalysePage />} />
+    </Routes>
+  </Router>
+);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+root.render(<App />);
