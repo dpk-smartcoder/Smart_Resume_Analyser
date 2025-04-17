@@ -21,14 +21,7 @@ CORS(app)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-@app.route('/get-job-categories', methods=['GET'])
-def get_job_categories():
-    try:
-        job_categories = df['jobtitle'].dropna().unique().tolist()
-        job_categories.sort()
-        return jsonify({"categories": job_categories})
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch job categories: {str(e)}"}), 500
+
 
 # Initialize Gemini API
 GEMINI_API_KEY = 'AIzaSyBOIaSVJmtLHoWxvnFwz_dcS42KfXuAmM8'
@@ -186,7 +179,7 @@ def getAvgScore(resume_data, jobtitle):
         total=total/cnt
     return total
 
-@app.route('/upload-resume', methods=['POST'])
+@app.route('/upload_resume', methods=['POST'])
 def upload_resume():
     if 'resume' not in request.files:
         return jsonify({'error': 'No resume file provided', 'suggestions': []}), 400
@@ -219,7 +212,7 @@ def upload_resume():
         prompt = f"Analyze the following resume and provide specific, actionable suggestions for improvement, be very concise and dont give very long sentences give short response:\n\n{resume_text}"
         response = model.generate_content([prompt])
         suggestions_text = response.text
-        suggestions = [s.strip() for s in suggestions_text.split('\n') if s.strip()]
+        suggestions = suggestions_text
 
         os.unlink(file_path)
         return jsonify({'score': avg_score, 'suggestions': suggestions})
@@ -228,6 +221,14 @@ def upload_resume():
         if os.path.exists(file_path):
             os.unlink(file_path)
         return jsonify({'error': str(e), 'suggestions': []}), 500
+@app.route('/get-job-categories', methods=['GET'])
+def get_job_categories():
+    try:
+        job_categories = df['jobtitle'].dropna().unique().tolist()
+        job_categories.sort()
+        return jsonify({"categories": job_categories})
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch job categories: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
