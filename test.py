@@ -18,6 +18,18 @@ import google.generativeai as genai  # Import the Gemini API library
 app = Flask(__name__)
 CORS(app)
 
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route('/get-job-categories', methods=['GET'])
+def get_job_categories():
+    try:
+        job_categories = df['jobtitle'].dropna().unique().tolist()
+        job_categories.sort()
+        return jsonify({"categories": job_categories})
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch job categories: {str(e)}"}), 500
+
 # Initialize Gemini API
 GEMINI_API_KEY = 'AIzaSyBOIaSVJmtLHoWxvnFwz_dcS42KfXuAmM8'
 if not GEMINI_API_KEY:
@@ -219,3 +231,6 @@ def upload_resume():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    app.run(port=5000, debug=True)
+
+    
