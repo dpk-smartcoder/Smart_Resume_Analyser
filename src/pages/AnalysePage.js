@@ -60,58 +60,7 @@
 //     }
 //   };
 
-//   const formatSuggestions = (suggestionString) => {
-//     if (!suggestionString) {
-//       return <p className="text-center text-gray-700">No suggestions available for this resume.</p>;
-//     }
-  
-//     const formattedElements = [];
-//     const suggestionsArray = suggestionString.split('\n');
-  
-//     suggestionsArray.forEach((suggestion, index) => {
-//       const trimmed = suggestion.trim();
-  
-//       // Handle headings wrapped in double asterisks: **Heading**
-//       if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-//         formattedElements.push(
-//           <h1 key={`point-${index}`} className="text-lg font-semibold text-blue-900">
-//             {trimmed.replace(/\*/g, "")}
-//           </h1>
-//         );
-//       } 
-//       // Handle custom heading and point with *###*Heading* Point
-//       else if (trimmed.includes("*###*")) {
-//         const headingStart = trimmed.indexOf("*###*") + 5;
-//         const headingEnd = trimmed.indexOf("*", headingStart);
-//         const headingText = trimmed.substring(headingStart, headingEnd).replace(/\*/g, "").trim();
-//         const pointText = trimmed.substring(headingEnd + 1).trim();
-//         formattedElements.push(
-//           <div key={`suggestion-${index}`} className="mb-2">
-//             <h4 className="text-lg font-semibold text-gray-900">{headingText}</h4>
-//             {pointText && <span className="text-gray-700 text-md">{pointText}</span>}
-//           </div>
-//         );
-//       } 
-//       // Handle bullet points: *Point
-//       else if (trimmed.startsWith("*")) {
-//         formattedElements.push(
-//           <li key={`point-${index}`} className="list-disc ml-6 text-gray-700">
-//             {trimmed.replace(/^\*/, "").trim()}
-//           </li>
-//         );
-//       } 
-//       // Fallback paragraph
-//       else if (trimmed !== "") {
-//         formattedElements.push(
-//           <p key={`point-${index}`} className="ml-6 text-gray-700">
-//             {trimmed}
-//           </p>
-//         );
-//       }
-//     });
-  
-//     return formattedElements;
-//   };
+
   
 
 //   return (
@@ -239,48 +188,31 @@ const AnalysePage = () => {
   };
 
   const formatSuggestions = (suggestionString) => {
-    if (!suggestionString) {
-      return <p className="text-center text-gray-700">No suggestions available for this resume.</p>;
-    }
-
+    if (!suggestionString) return <p className="text-center text-gray-700">No suggestions available for this resume.</p>;
     const formattedElements = [];
     const suggestionsArray = suggestionString.split('\n');
-
     suggestionsArray.forEach((suggestion, index) => {
-      const trimmed = suggestion.trim();
-
-      if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-        formattedElements.push(
-          <h1 key={`point-${index}`} className="text-lg font-semibold text-blue-900">
-            {trimmed.replace(/\*/g, "")}
-          </h1>
-        );
-      } else if (trimmed.includes("*###*")) {
-        const headingStart = trimmed.indexOf("*###*") + 5;
-        const headingEnd = trimmed.indexOf("*", headingStart);
-        const headingText = trimmed.substring(headingStart, headingEnd).replace(/\*/g, "").trim();
-        const pointText = trimmed.substring(headingEnd + 1).trim();
+      var i=0;
+      for(i=0;i<suggestion.length;i++)if(suggestion[i]==='*')break;
+      if(suggestion[0]==='*'&&suggestion[1]==='*')formattedElements.push(<h1 key={`point-${index}`} className="text-lg font-semibold text-blue-900">{suggestion.substring(2,suggestion.length-2).trim()}</h1 >);
+      else if (suggestion[i+4]==='*') {
+        var j=i+4;for(j=i+6;j<suggestion.length;j++)if(suggestion[j]==='*')break
+        const headingText = suggestion.substring(i+6, j-1).trim();
+        const pointText = suggestion.substring(j+2).trim();
         formattedElements.push(
           <div key={`suggestion-${index}`} className="mb-2">
             <h4 className="text-lg font-semibold text-gray-900">{headingText}</h4>
             {pointText && <span className="text-gray-700 text-md">{pointText}</span>}
           </div>
         );
-      } else if (trimmed.startsWith("*")) {
-        formattedElements.push(
-          <li key={`point-${index}`} className="list-disc ml-6 text-gray-700">
-            {trimmed.replace(/^\*/, "").trim()}
-          </li>
-        );
-      } else if (trimmed !== "") {
-        formattedElements.push(
-          <p key={`point-${index}`} className="ml-6 text-gray-700">
-            {trimmed}
-          </p>
-        );
+      }
+      else if(suggestion[0]==='*'){
+        formattedElements.push(<li key={`point-${index}`} className="list-disc ml-6 text-gray-700">{suggestion.substring(1).trim()}</li >);
+      }
+       else if (suggestion.trim() !== "") {
+        formattedElements.push(<p key={`point-${index}`} className="list-disc ml-6 text-gray-700">{suggestion.substring(0).trim()}</p >);
       }
     });
-
     return formattedElements;
   };
 
@@ -302,12 +234,12 @@ const AnalysePage = () => {
               <div className="text-5xl text-gray-400">⬆️</div>
               <p className="mt-2">
                 Click the button above or drop your resume in here.<br />
-                English resumes in <span className="font-bold">PDF (or DOCX)</span> only. Max 2MB file size.
+                English resumes in <span className="font-bold">PDF</span> only. Max 2MB file size.
               </p>
               <input
                 id="resume-upload"
                 type="file"
-                accept=".pdf,.docx"
+                accept=".pdf"
                 className="hidden"
                 onChange={(e) => setUploadedFile(e.target.files[0])}
               />
@@ -345,7 +277,7 @@ const AnalysePage = () => {
               To make sure we analyze your resume correctly and generate the right recommendations, please ensure that the resume you upload meets the following guidelines:
             </p>
             <ul className="list-disc list-inside space-y-2">
-              <li>Is in PDF or DOCX</li>
+              <li>Is in PDF</li>
               <li>Is in English</li>
               <li>Contains readable text & is not an image</li>
               <li>Is a maximum of 2 MB in filesize</li>
