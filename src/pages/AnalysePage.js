@@ -386,7 +386,7 @@ const AnalysePage = () => {
       )}
 
       {resultVisible && (
-  <div className="flex justify-center px-4 mt-8 mb-36">
+  <div className="flex justify-center px-4 mt-16 mb-36">
     <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-hidden">
       {/* Tabs */}
       <div className="flex border-b">
@@ -429,7 +429,7 @@ const AnalysePage = () => {
             <path d="M9 2a7 7 0 00-7 7v1a7 7 0 0014 0v-1a7 7 0 00-7-7zM8 9h2v4H8V9zM8 15h2v2H8v-2z" />
           </svg>
           <p className="text-xs text-gray-700">
-            Your score is benchmarked against 1m+ resumes at your career level, and is based on 20+ key recruiter checks. The higher your resume score, the stronger your resume is and the more interviews you are likely to get.
+            Your score is benchmarked against 20k+ resumes at your career level, and is based on top 3 key recruiter checks. The higher your resume score, the stronger your resume is and the more interviews you are likely to get.
           </p>
         </div>
 
