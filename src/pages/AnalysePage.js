@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import CustomSelect from "../components/CustomSelect";
+import { useNavigate } from "react-router-dom";
 
 const AnalysePage = () => {
+  const navigate = useNavigate();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [jobCategories, setJobCategories] = useState([]);
   const [selectedJobCategory, setSelectedJobCategory] = useState("");
@@ -11,6 +13,7 @@ const AnalysePage = () => {
   const [resumeScore, setResumeScore] = useState(null);
   const [suggestions, setSuggestions] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   useEffect(() => {
     const fetchJobCategories = async () => {
@@ -90,7 +93,11 @@ const AnalysePage = () => {
 
   return (
     <div className="bg-[#0D0B37] text-white min-h-screen flex flex-col">
-      <Header />
+      <Header 
+      showAbout={showAbout}
+        onToggleAbout={() => setShowAbout((s) => !s)}
+        onAnalyse={() => navigate("/")}
+      />
 
       {!resultVisible && (
         <div className="flex flex-col items-center justify-center py-12 px-4">

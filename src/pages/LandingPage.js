@@ -21,7 +21,7 @@ const LandingPage = () => {
         <Header
         showAbout={showAbout}
         onToggleAbout={() => setShowAbout((s) => !s)}
-        onAnalyse={() => navigate("/analyse")}
+        onAnalyse={() => navigate("/")}
       />
       </div>
 
