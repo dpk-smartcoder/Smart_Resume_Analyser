@@ -417,7 +417,7 @@ const AnalysePage = () => {
 
         {/* Suggestions Section */}
         <div className="pt-6 border-t">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Suggestions</h3>
+          <h3 className="text-3xl font-semibold text-blue-800 mb-2">Suggestions</h3>
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             {formatSuggestions(suggestions)}
           </ul>
