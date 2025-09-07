@@ -14,6 +14,7 @@ from flask_cors import CORS
 import tempfile
 import os
 import google.generativeai as genai  # Import the Gemini API library
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app)
@@ -24,7 +25,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 # Initialize Gemini API
-GEMINI_API_KEY = 'AIzaSyBOIaSVJmtLHoWxvnFwz_dcS42KfXuAmM8'
+load_dotenv()
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable not set.")
 genai.configure(api_key=GEMINI_API_KEY)
